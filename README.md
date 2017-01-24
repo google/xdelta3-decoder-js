@@ -1,3 +1,5 @@
+The code in this github repository is in a very rough state.
+
 This is a Javascript port of XDelta3 C++ decoder.
 See the XDelta3 website for infomation on XDelta3: http://xdelta.org/
 
