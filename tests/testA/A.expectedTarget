@@ -1,0 +1,67 @@
+/**
+ * Enum for error values.
+ * @enum {string}
+ */
+tachyfont.Error = {
+  FILE_ID: 'ETF',
+  // 02-03 no longer used.
+  KNOWN_WINDOW_ON_ERROR: '05',
+  UNKNOWN_WINDOW_ON_ERROR: '06',
+  NOT_ENOUGH_STORAGE: '07',
+  STORAGE_INFORMATION_FUNCTION: '08',
+  GET_STORAGE_INFORMATION: '09',
+  NO_PRELUDE_REPORTS: '10',
+  PRELUDE_REPORT_TYPE: '11',
+  BELOW_GLOBAL_STABLE_TIME: '12',
+  OPEN_GLOBAL_DATABASE: '13',
+  NO_INDEXED_DB: '14',
+  NO_MUTATION_OBSERVER: '15',
+  NO_FONT_LOADER: '16',
+  PAGE_LOADED: '17',
+  GET_COMPACT_FONT: '18',
+  // 19 no longer used.
+  DISPLAY_COMPACT_FONT: '20',
+  NO_UINT8ARRAY_FROM: '21',
+  END: '00'
+};
+
+
+/**
+ * The error reporter for this file.
+ * @param {string} errNum The error number (encoded in a string);
+ * @param {*=} opt_errInfo Optional error object;
+ * @param {string} opt_fontId Optional identifier for the font.
+ */
+tachyfont.reportError = function(errNum, opt_errInfo, opt_fontId) {
+  var errInfo = opt_errInfo || '';
+  var fontId = opt_fontId || '000';
+  tachyfont.Reporter.reportError(
+      tachyfont.Error.FILE_ID + errNum, fontId, errInfo);
+};
+
+
+if (window.addEventListener) {
+  /**
+   * Report any uncaught errors.
+   * @param {!Event} error The error information.
+   * @private
+   */
+  tachyfont.windowOnError_ = function(error) {
+    if (!error['filename']) {
+      // The information is stripped from the report because of CORS issues.
+      tachyfont.reportError(tachyfont.Error.UNKNOWN_WINDOW_ON_ERROR);
+      return;
+    }
+    var errorObj = {};
+    errorObj['message'] = error['message'];
+    errorObj['filename'] = error['filename'];
+    errorObj['lineno'] = error['lineno'];
+    errorObj['colno'] = error['colno'];
+    if (error.error) {
+      errorObj['stack'] = error['error']['stack'].substring(0, 1000);
+    }
+    var errorStr = JSON.stringify(errorObj);
+    tachyfont.reportError(tachyfont.Error.KNOWN_WINDOW_ON_ERROR, errorStr);
+  };
+  window.addEventListener('error', tachyfont.windowOnError_, false);
+}

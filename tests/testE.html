@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>XDelta3 TestE: big binary with source and secondary compressor</title>
+<link rel="stylesheet" href="style.css">
+<script src="misc.js"></script>
+<script src="debug.js"></script>
+<script src="../xdelta3_decoder_with_debug.js"></script>
+<script>
+  var deltaFilePath = 'testE/E.delta';
+  var sourceFilePath = 'testE/E.source';
+  var expectedTargetFilePath = 'testE/E.expectedTarget';
+
+  function decode(delta, source, expectedTarget) {
+    setInnerHtml('message', 'processing');
+    //XDelta3Decoder.disableDebug();
+    setTimeout(function() {
+      try {
+        var startTime = Date.now();
+        var target = XDelta3Decoder.decode(delta, source);
+        var deltaTime = Date.now() - startTime;
+      } catch(e) {
+        setInnerHtml('message', 'EXCEPTION: ' + e.message);
+        return;
+      }
+      var targetUint8Array = new Uint8Array(target);
+      var msg = compareBytes(targetUint8Array, expectedTarget);
+      setInnerHtml('message', msg + ' in ' + (deltaTime) + ' milliseconds');
+    }, 0);
+  }
+
+  // Chain of calls to get the files.
+  var sourceBytes;
+  var deltaBytes;
+  var expectedTargetBytes;
+  function gotDelta(deltaUint8) {
+    deltaBytes = deltaUint8;
+    loadFile(expectedTargetFilePath, gotExpectedTarget);
+  }
+  function gotExpectedTarget(expectedTargetUint8) {
+    expectedTargetBytes = expectedTargetUint8;
+    loadFile(sourceFilePath, gotSource);
+  }
+  function gotSource(sourceUint8) {
+    sourceBytes = sourceUint8;
+    decode(deltaBytes, sourceBytes, expectedTargetBytes);
+  }
+  loadFile(deltaFilePath, gotDelta);
+</script>
+</head>
+<body>
+  XDelta3 decode big binary delta with a source and secondary compressor<br><br>
+
+  status: <span id="message"></span><br><br>
+  <table id='pathInfo'></table>
+<script>
+  addRow('pathInfo', 'delta', deltaFilePath);
+  addRow('pathInfo', 'source', sourceFilePath);
+  addRow('pathInfo', 'expectedTarget', expectedTargetFilePath);
+</script>
+</body>
